@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MovieHub</title>
+  <link rel="stylesheet" href="proyecto.css">
+</head>
+<body>
+  <header class="shadow">
+    <div class="logo">MovieHub</div>
+    <ul>
+        <li><a href="#">Inicio</a></li>
+  
+      </ul>
+  
+    <div class="header-actions">
+      <div class="search">
+        <input type="text" id="searchInput" placeholder="Buscar película...">
+        <button id="searchButton">Buscar</button>
+      </div>
+      <button id="btn-dark-mode">Modo Oscuro</button>
+    </div>
+  </header>
+
+  <section class="hero">
+    <img src="IMAGEN1.jpeg" alt="Recomendado para ti...">
+    <div class="hero-content">
+      <h1>Recomendado para ti...</h1>
+    </div>
+  </section>
+
+  <section class="movies-grid" id="movies"></section>
+
+  <div class="load-more-container">
+    <button id="btn-load-more">Cargar más</button>
+  </div>
+
+  <footer>
+    <p>2025 MovieHub — Todos los derechos reservados</p>
+  </footer>
+
+
+  <div id="movieModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2 id="modalTitle"></h2>
+      <img id="modalPoster" src="" alt="">
+      <p id="modalOverview"></p>
+      <p><strong>Fecha de estreno:</strong> <span id="modalDate"></span></p>
+      <p><strong>Calificación:</strong> ⭐ <span id="modalRating"></span></p>
+    </div>
+  </div>
+
+  <script>
+
+    const darkBtn = document.getElementById('btn-dark-mode');
+    darkBtn.onclick = () => {
+      const dark = document.body.classList.toggle('dark-mode');
+      darkBtn.textContent = dark ? 'Modo Claro' : 'Modo Oscuro';
+    };
+
+    const API_KEY = '171fd34c6f03944f249df1e7f4647241';
+    const moviesEl = document.getElementById('movies');
+    const loadBtn = document.getElementById('btn-load-more');
+    const searchBtn = document.getElementById('searchButton');
+    const searchInput = document.getElementById('searchInput');
+
+    const modal = document.getElementById('movieModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalPoster = document.getElementById('modalPoster');
+    const modalOverview = document.getElementById('modalOverview');
+    const modalDate = document.getElementById('modalDate');
+    const modalRating = document.getElementById('modalRating');
+    const modalClose = document.querySelector('.modal .close');
+
+    let page = 1;
+    let query = '';
+
+    async function getMovies(p = 1) {
+      let url = query 
+        ? `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&language=es-MX&query=${query}&page=${p}`
+        : `https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}&language=es-MX&page=${p}`;
+
+      const res = await fetch(url);
+      const data = await res.json();
+
+      data.results.forEach(movie => {
+        const card = document.createElement('div');
+        card.className = 'movie-card shadow';
+        card.innerHTML = `
+          <img src="https://image.tmdb.org/t/p/w500${movie.poster_path}" alt="${movie.title}">
+          <h3>${movie.title}</h3>
+          <p>Calificación: ⭐ ${movie.vote_average.toFixed(1)}</p>
+          <span class="tag paid">Consultar</span>
+        `;
+      
+        card.onclick = () => {
+          modalTitle.textContent = movie.title;
+          modalPoster.src = `https://image.tmdb.org/t/p/w500${movie.poster_path}`;
+          modalOverview.textContent = movie.overview || 'Sin descripción disponible.';
+          modalDate.textContent = movie.release_date || 'Desconocida';
+          modalRating.textContent = movie.vote_average.toFixed(1);
+          modal.style.display = 'flex';
+        };
+        moviesEl.appendChild(card);
+      });
+    }
+
+
+    modalClose.onclick = () => modal.style.display = 'none';
+    window.onclick = e => { if(e.target === modal) modal.style.display = 'none'; }
+
+
+    searchBtn.onclick = () => {
+      query = searchInput.value.trim();
+      moviesEl.innerHTML = '';
+      page = 1;
+      getMovies();
+    };
+
+    loadBtn.onclick = () => {
+      page++;
+      getMovies(page);
+    };
+
+    getMovies();
+  </script>
+</body>
+</html>
